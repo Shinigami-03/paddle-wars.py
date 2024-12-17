@@ -27,22 +27,11 @@ def draw_paddle(x, y, w, h):
     glVertex2f(x + w, y)
     glEnd()
 
-def draw(paddle_height, paddle_width, left_paddle_y, right_paddle_y, circle_x, circle_y, circle_radius):
-    glClear(GL_COLOR_BUFFER_BIT)
-
-    # left paddle
-    glColor3f(1, 0, 0) # Set color to red
-    draw_paddle(-0.99, left_paddle_y - paddle_height / 2, h=paddle_height, w=paddle_width)
-
-    # right paddle
-    glColor3f(0, 0, 1) # Set color to blue
-    draw_paddle(0.99 - paddle_width, right_paddle_y - paddle_height / 2, h=paddle_height, w=paddle_width)
-
-    # ball
-    glColor3f(1, 1, 1) # Set color to white
-    draw_circle(circle_x, circle_y, circle_radius)
-    pass
-
+def draw_text(text, x, y):
+    glColor3f(1.0, 1.0, 1.0)  # White text
+    glRasterPos2f(x, y)
+    for char in text:
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ord(char))
 
 def game_loop(window):
     move_speed = 0.01
@@ -61,8 +50,21 @@ def game_loop(window):
     circle_move_up = True
     circle_move_right = True
 
+    score_left = 0
+    score_right = 0
+    score_to_win = 10
+
+    glutInit()
     while not glfwWindowShouldClose(window):
         glfwPollEvents()
+
+        if score_left == score_to_win or score_right == score_to_win:
+            if score_left == score_to_win:
+                draw_text("Left player wins!", -0.3, 0)
+            else:
+                draw_text("Right player wins!", -0.3, 0)
+            glfwSwapBuffers(window)
+            continue
 
         if glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS:
             if right_paddle_y + paddle_height / 2 <= 1:
@@ -92,9 +94,11 @@ def game_loop(window):
         if circle_x + circle_radius >= 1:
             circle_x, circle_y = random.uniform(-1, 1), random.uniform(-1, 1)
             circle_move_right = False
+            score_left += 1
         if circle_x - circle_radius <= -1:
             circle_x, circle_y = random.uniform(-1, 1), random.uniform(-1, 1)
             circle_move_right = True
+            score_right += 1
 
         # if paddle left and circle collide
         if -1 <= circle_x - circle_radius <= -1 + paddle_width and left_paddle_y - paddle_height / 2 <= circle_y <= left_paddle_y + paddle_height / 2:
@@ -104,7 +108,33 @@ def game_loop(window):
         if 1 - paddle_width <= circle_x + circle_radius <= 1 and right_paddle_y - paddle_height / 2 <= circle_y <= right_paddle_y + paddle_height / 2:
             circle_move_right = False
 
-        draw(paddle_height, paddle_width, left_paddle_y, right_paddle_y, circle_x, circle_y, circle_radius)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        # left paddle
+        glColor3f(1, 0, 0) # Set color to red
+        draw_paddle(-0.99, left_paddle_y - paddle_height / 2, h=paddle_height, w=paddle_width)
+
+        # right paddle
+        glColor3f(0, 0, 1) # Set color to blue
+        draw_paddle(0.99 - paddle_width, right_paddle_y - paddle_height / 2, h=paddle_height, w=paddle_width)
+
+        # ball
+        glColor3f(1, 1, 1) # Set color to white
+        draw_circle(circle_x, circle_y, circle_radius)
+
+        # center line
+        glColor3f(0.5, 0.5, 0.5)
+        glBegin(GL_LINES)
+        glVertex2f(0, 1)
+        glVertex2f(0, -1)
+        glEnd()
+
+        draw_text("Paddle Wars", -0.1, 0.9)
+        
+        # score
+        draw_text(f"{score_left}", -0.15, 0.8)
+        draw_text(f"{score_right}", 0.13, 0.8)
+
         glfwSwapBuffers(window)
 
 def main():
